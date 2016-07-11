@@ -10,12 +10,13 @@ MainWindow::MainWindow(QWidget *parent) :
     //indice pour les boucles conditionnelles
     int i=0;
 
+    //init des données
+    countListingRacers=0;
+    bLoopRace=false;
+
     //recupere les infos du fichier de config:
     //labels des listings, nombre et noms des courses,....
     readConfig();
-
-    //init des données
-    countListingRacers=0;
 
     //affichage du temps pour les coureurs
     showExternTime=new QLCDNumber();
@@ -99,6 +100,10 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->cB_camera->setChecked(true);
     }
 
+    //race with laps (loopRace)
+    ui->cB_enableLap->setChecked(bLoopRace);
+    connect(ui->cB_enableLap,SIGNAL(clicked(bool)),this, SLOT(enableLaps(bool)));
+
     //suivi live
     ui->tabRaceLive->setEnabled(false);
 
@@ -128,6 +133,7 @@ void MainWindow::loadListing()
         ui->startButton->setEnabled(true);
         ui->pB_loadLastRace->setEnabled(false);
         ui->pB_loadListing->setEnabled(false);
+        ui->cB_enableLap->setEnabled(false);
     }
 }
 
@@ -194,56 +200,64 @@ void MainWindow::startClicked()
 void MainWindow::restoreStartedRace()
 {
     //on recharge les anciens résultats
+    int ret=QMessageBox::Yes;
 
-    bool isLoaded=false;
-    int maxSubRaces = 0;
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Ouvrir Resultats"), "./", tr("Results (*.csv)"));
-    if (!(fileName.isEmpty()))
+    if(bLoopRace)
+        ret=QMessageBox::question(this, "Chrono", tr("Option de course en boucle \"cochée\"!\nAssurez-vous de prendre le bon format de fichier!"), QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
+
+    //we accept the modification
+    if(ret==QMessageBox::Yes)
     {
-        isLoaded=importFromResultsCSV(fileName,false);
-        maxSubRaces = subRaces.count();
-    }
-
-
-    //on calcul le temps a ajouter au chrono en se basant sur l'horaire
-    //de depart sauvegarde
-//    QTime presentTime=QTime::currentTime();
-//    float diffTime=(savedStart.msecsTo(presentTime))/1000;
-//    deltaTime=(int)diffTime;
-
-    QDateTime presentDateTime=QDateTime::currentDateTime();
-    float diffTime=initStart.secsTo(presentDateTime);
-    deltaTime=(int)diffTime;
-
-    //mise à jour du chrono
-    elapsedTime=deltaTime;
-    showTime();
-
-    //pour un lancement automatique du chrono
-    //startClicked();
-    if (isLoaded)
-    {
-        //order the racers
-        for(int idxSubRace=0;idxSubRace<maxSubRaces;idxSubRace++)
+        bool isLoaded=false;
+        int maxSubRaces = 0;
+        QString fileName = QFileDialog::getOpenFileName(this,
+            tr("Ouvrir Resultats"), "./", tr("Results (*.csv)"));
+        if (!(fileName.isEmpty()))
         {
-            disconnect(subRacesResults.at(idxSubRace),SIGNAL(cellChanged(int,int)),this,SLOT(modifyResults(int,int)));
-            int maxChkPts=numberOfChkPts[subRaces[idxSubRace]];
-
-            subRacesResults[idxSubRace]->sortItems(hdrResults.at(idxSubRace).indexOf(labelChkPts.at(idxSubRace).at(maxChkPts-1)));
-            //check their results
-            classRacers();
-            connect(subRacesResults.at(idxSubRace),SIGNAL(cellChanged(int,int)),this,SLOT(modifyResults(int,int)));
+            isLoaded=importFromResultsCSV(fileName,false);
+            maxSubRaces = subRaces.count();
         }
 
-        ui->tableWidget_Listing->setEditTriggers(QAbstractItemView::NoEditTriggers);
-        ui->tabWidgetActions->setTabEnabled(0,true);
-        ui->startButton->setEnabled(true);
-        ui->pB_loadLastRace->setEnabled(false);
-        ui->pB_loadListing->setEnabled(false);
-        //or add,delete another checkpoints
-        ui->pb_ChksPtsAdd->setDisabled(true);
-        ui->pb_ChksPtsDel->setDisabled(true);
+
+        //on calcul le temps a ajouter au chrono en se basant sur l'horaire
+        //de depart sauvegarde
+    //    QTime presentTime=QTime::currentTime();
+    //    float diffTime=(savedStart.msecsTo(presentTime))/1000;
+    //    deltaTime=(int)diffTime;
+
+        QDateTime presentDateTime=QDateTime::currentDateTime();
+        float diffTime=initStart.secsTo(presentDateTime);
+        deltaTime=(int)diffTime;
+
+        //mise à jour du chrono
+        elapsedTime=deltaTime;
+        showTime();
+
+        //pour un lancement automatique du chrono
+        //startClicked();
+        if (isLoaded)
+        {
+            //order the racers
+            for(int idxSubRace=0;idxSubRace<maxSubRaces;idxSubRace++)
+            {
+                disconnect(subRacesResults.at(idxSubRace),SIGNAL(cellChanged(int,int)),this,SLOT(modifyResults(int,int)));
+                int maxChkPts=numberOfChkPts[subRaces[idxSubRace]];
+
+                subRacesResults[idxSubRace]->sortItems(hdrResults.at(idxSubRace).indexOf(labelChkPts.at(idxSubRace).at(maxChkPts-1)));
+                //check their results
+                classRacers();
+                connect(subRacesResults.at(idxSubRace),SIGNAL(cellChanged(int,int)),this,SLOT(modifyResults(int,int)));
+            }
+
+            ui->tableWidget_Listing->setEditTriggers(QAbstractItemView::NoEditTriggers);
+            ui->tabWidgetActions->setTabEnabled(0,true);
+            ui->startButton->setEnabled(true);
+            ui->pB_loadLastRace->setEnabled(false);
+            ui->pB_loadListing->setEnabled(false);
+            //or add,delete another checkpoints
+            ui->pb_ChksPtsAdd->setDisabled(true);
+            ui->pb_ChksPtsDel->setDisabled(true);
+        }
     }
 }
 
@@ -366,8 +380,13 @@ bool MainWindow::importFromResultsCSV(QString nameFile, bool withRowHeader)
     int i=0;
     bool withResults=false;
 
+    //from now we can't change the type of the race
+    ui->cB_enableLap->setEnabled(false);
+
     int maxCol=ui->tableWidget_Listing->columnCount();
-    qDebug() << maxCol;
+    if(bLoopRace)
+        maxCol=maxCol+1;
+    //qDebug() << maxCol;
 
     QHash<QString, int> maxNumberOfChkPts;
 
@@ -390,7 +409,7 @@ bool MainWindow::importFromResultsCSV(QString nameFile, bool withRowHeader)
 
                 //on remplit le listing
                 ui->tableWidget_Listing->insertRow(indexItem);
-                for(i=0;i<maxCol;i++)
+                for(i=0;i<ui->tableWidget_Listing->columnCount();i++)
                 {
                     ui->tableWidget_Listing->setItem(indexItem,i,new QTableWidgetItem(listingLine.value(i)));
 
@@ -487,6 +506,7 @@ bool MainWindow::importFromResultsCSV(QString nameFile, bool withRowHeader)
                                     subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(str_name))->setText(listingLine.value(hdrListing[str_name]));
                                     subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(str_frstname))->setText(listingLine.value(hdrListing[str_frstname]));
                                     subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(str_assoc))->setText(listingLine.value(hdrListing[str_assoc]));
+                                    subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(str_loop))->setText(listingLine.value(hdrListing[str_loop]));
 
                                     //qDebug()<<"ajout du chekpoint"<< numChckPts<<"à"<<addTime << "au coureur "<< selRacer <<"dans la course"<<subRaces.at(idxSubRace);
                                 }
@@ -524,6 +544,17 @@ QStringList MainWindow::processLineFromCSV(QString line)
 QStringList strings = line.split(";");
 return strings;
 }
+int MainWindow::addLap(int idxSubRace, int selRow)
+{
+    if(selRow>=0)
+    {
+        int currentLap=subRacesResults[idxSubRace]->item(selRow,hdrResults.at(idxSubRace).indexOf(str_loop))->text().toInt();
+        currentLap++;
+        subRacesResults[idxSubRace]->item(selRow,hdrResults.at(idxSubRace).indexOf(str_loop))->setText(QString("%1").arg(currentLap));
+    }
+    return 0;
+
+}
 
 int MainWindow::addScore(int idxSubRace,QString racerNumber,QString s_time, int numChkPts, int selRow)
 {
@@ -546,10 +577,11 @@ int MainWindow::addScore(int idxSubRace,QString racerNumber,QString s_time, int 
             //we add the bib
             else if (i==hdrResults.at(idxSubRace).indexOf(str_bib))
                 ligneTableWidget.append(new QTableWidgetItem(racerNumber));
-
+            else if (i==hdrResults.at(idxSubRace).indexOf(str_loop))
+                ligneTableWidget.append(new QTableWidgetItem("1"));
             //the other cells left empty
             else
-            ligneTableWidget.append(new QTableWidgetItem());
+                ligneTableWidget.append(new QTableWidgetItem());
         }
 
         //append the row
@@ -617,12 +649,24 @@ void MainWindow::saveResults(QString fileName)
                     countCol++;
                 }
 
+
                 //we are looking for the racer in the result tables
                 for(i=0;i<subRacesResults[idxSubRace]->rowCount();i++)
                 {
                     //find him/her
                     if(ui->tableWidget_Listing->item(p,hdrListing[str_bib])->text()==subRacesResults[idxSubRace]->item(i,hdrResults.at(idxSubRace).indexOf(str_bib))->text())
                     {
+                        if(bLoopRace)
+                        {
+                            QString nbLaps=subRacesResults.at(idxSubRace)->item(i,hdrResults.at(idxSubRace).indexOf(str_loop))->text();
+                            if(nbLaps.isEmpty())
+                                resultLine.append(";");
+                            else
+                            {
+                                resultLine.append(nbLaps);
+                                resultLine.append(";");
+                            }
+                        }
                         //we add results
                         for(j=hdrResults.at(idxSubRace).indexOf(labelChkPts.at(idxSubRace)[0]);j<subRacesResults[idxSubRace]->columnCount();j++)
                         {
@@ -654,7 +698,6 @@ void MainWindow::closeEvent (QCloseEvent *event)
                 tr("Etes-vous sûr de vouloir fermer l'application?\nLe chrono sera arrêté!\n"),
                 QMessageBox::No | QMessageBox::Yes,
                 QMessageBox::Yes);
-    qDebug() << "timer vérifié";
 
     if (resBtn != QMessageBox::Yes) {
         event->ignore();
@@ -695,6 +738,7 @@ void MainWindow::modifyResults(int rowSel, int colSel){
     int idxSubRace=subRaces.count()-1;
     int idxSubRaceChecked=subRaces.count()-1;
     int maxChkPts=1;
+    bool isNewLap=false;
 
     //look for the pointer of the sender object in our table
     //to not cast the object later
@@ -793,9 +837,15 @@ void MainWindow::modifyResults(int rowSel, int colSel){
                                 if(lastChkPts>maxChkPts)
                                     lastChkPts=maxChkPts-1;
 
+                                if ((lastChkPts==(maxChkPts-1))&&(bLoopRace))
+                                    isNewLap=true;
+
+
 
                                 QString timeToAdd=subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(labelChkPts.at(idxSubRace).at(0)))->text();
                                 subRacesResults[idxSubRaceChecked]->item(knownBibRow,hdrResults.at(idxSubRaceChecked).indexOf(labelChkPts.at(idxSubRaceChecked).at(lastChkPts)))->setText(timeToAdd);
+                                if(isNewLap)
+                                    addLap(idxSubRaceChecked,knownBibRow);
                                 subRacesResults[idxSubRace]->removeRow(rowSel);
                                 countRacersList[idxSubRace]=countRacersList[idxSubRace]-1;
 
@@ -818,8 +868,13 @@ void MainWindow::modifyResults(int rowSel, int colSel){
                                 if(lastChkPts>maxChkPts)
                                     lastChkPts=maxChkPts-1;
 
+                                if ((lastChkPts==(maxChkPts-1))&&(bLoopRace))
+                                    isNewLap=true;
+
                                 QString timeToAdd=subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(labelChkPts.at(idxSubRace).at(0)))->text();
                                 subRacesResults[idxSubRaceChecked]->item(knownBibRow,hdrResults.at(idxSubRaceChecked).indexOf(labelChkPts.at(idxSubRaceChecked).at(lastChkPts)))->setText(timeToAdd);
+                                if(isNewLap)
+                                    addLap(idxSubRaceChecked,knownBibRow);
                                 subRacesResults[idxSubRace]->removeRow(rowSel);
                                 countRacersList[idxSubRace]=countRacersList[idxSubRace]-1;
                             }
@@ -873,6 +928,13 @@ void MainWindow::modifyResults(int rowSel, int colSel){
                //pour l'instant il est stocke au premier index de course
                idxSubRaceChecked=inWhichSubRace(selRacer);
 
+               if(bLoopRace)
+               {
+                    //is the time is the finisher time
+                    maxChkPts=numberOfChkPts[subRaces[idxSubRaceChecked]];
+                    if(maxChkPts<=1)//it's a finisher time
+                        isNewLap=true;
+                }
 
 
                ui->tabResults->setCurrentIndex(idxSubRaceChecked);
@@ -892,6 +954,8 @@ void MainWindow::modifyResults(int rowSel, int colSel){
                     subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(str_frstname))->setText("?");
                     subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(str_assoc))->setText("?");
                    }
+                   if (isNewLap)
+                       subRacesResults[idxSubRace]->item(rowSel,hdrResults.at(idxSubRace).indexOf(str_loop))->setText("1");;
                }
                else //je le renseigne dans un autre tableau et je le retire du tableau present
                {
@@ -914,6 +978,9 @@ void MainWindow::modifyResults(int rowSel, int colSel){
                       subRacesResults[idxSubRaceChecked]->item(newRowSel,hdrResults.at(idxSubRaceChecked).indexOf(str_frstname))->setText("?");
                       subRacesResults[idxSubRaceChecked]->item(newRowSel,hdrResults.at(idxSubRaceChecked).indexOf(str_assoc))->setText("?");
                   }
+                  if (isNewLap)
+                      subRacesResults[idxSubRaceChecked]->item(newRowSel,hdrResults.at(idxSubRaceChecked).indexOf(str_loop))->setText("1");
+
                    subRacesResults[idxSubRace]->removeRow(rowSel);
                    countRacersList[idxSubRace]=countRacersList[idxSubRace]-1;
                    subRacesResults[idxSubRaceChecked]->sortItems(hdrResults.at(idxSubRaceChecked).indexOf(labelChkPts.at(idxSubRaceChecked).at(maxChkPts-1)));
@@ -975,6 +1042,7 @@ void MainWindow::enterNumberRacer(){
     int identifiedRow=0;
 
         bool isChecked=false;
+        bool isNewLap=false;
         int countChkPts=0; //Nombre de checkpoints passes par ce dossard
         int maxChkPts=1; //nombre de checkpoints devant etre passes par ce dossard
         int newTimeRow=-1;
@@ -1019,7 +1087,10 @@ void MainWindow::enterNumberRacer(){
                     //ts les checkpoints possibles sont saisis, c'est un finisher, c'est sur :-)
                     if((countChkPts>=labelChkPts.at(idxSubRace).count())||(countChkPts>=maxChkPts))
                     {
-                        QMessageBox::information( this, "Chrono",tr("Ce coureur est déjà arrivé\n"), QMessageBox::Ok,  QMessageBox::Ok);
+                        if(bLoopRace)
+                            addLap(idxSubRace,rowKnownNumRacer);
+                        else
+                            QMessageBox::information( this, "Chrono",tr("Ce coureur est déjà arrivé\n"), QMessageBox::Ok,  QMessageBox::Ok);
                         isChecked=false;
                     }
                     //il reste des checkpoints a passer avant de terminer
@@ -1042,6 +1113,7 @@ void MainWindow::enterNumberRacer(){
                         else
                             isChecked=false;
                     }
+
 
                     //isChecked=false;
                     ui->lineEditFinish->clear();
@@ -1104,6 +1176,7 @@ void MainWindow::enterNumberRacer(){
                 //complete with racer's information
                 if(rowSel>=0)
                 {
+
                     //unknown or "blank" bib
                     if(identifiedRow<0)
                     {
@@ -1366,6 +1439,9 @@ void MainWindow::readConfig(void)
     byDefaultS="Temps";
     str_time=settings.value("listing/str_time",byDefaultS).toString();
     byDefaultS.clear();
+    byDefaultS="Tour";
+    str_loop=settings.value("listing/loop",byDefaultS).toString();
+    byDefaultS.clear();
 
 
     byDefaultS="The Race";
@@ -1396,6 +1472,7 @@ void MainWindow::readConfig(void)
 
     byDefaultB=false;
     useCamera=settings.value("option/usecamera",byDefaultB).toBool();
+    bLoopRace=settings.value("option/loopRace",byDefaultB).toBool();
 }
 void MainWindow::writeConfig(void)
 {
@@ -1835,7 +1912,10 @@ bool MainWindow::initRaceCharacteristics(QTableWidget* table)
 
         //begin building header
         QStringList newHdrResults;
-        newHdrResults= (QStringList()<< str_bib<<str_name<<str_frstname<<str_assoc<<str_scratch<<str_order);
+        if(bLoopRace)
+            newHdrResults=(QStringList()<< str_bib<<str_name<<str_frstname<<str_assoc<<str_scratch<<str_order<<str_loop);
+        else
+            newHdrResults= (QStringList()<< str_bib<<str_name<<str_frstname<<str_assoc<<str_scratch<<str_order);
 
         //append a column to store at least one result time
         //if we add later another chekpoints, this column will be the finisher time
@@ -1942,6 +2022,12 @@ bool MainWindow::initRaceCharacteristics(QTableWidget* table)
          numberOfChkPts[subRaces.at(idxSubRace)]=nbChkPts;
          connect(subRacesResults[idxSubRace],SIGNAL(cellChanged(int,int)),this,SLOT(modifyResults(int,int)));
      }
+
+ }
+
+ void MainWindow::enableLaps(bool state)
+ {
+     bLoopRace=state;
 
  }
 

@@ -46,7 +46,7 @@
        <string/>
       </property>
       <property name="pixmap">
-       <pixmap resource="MyRes.qrc">:/icons/icons/logoRace.png</pixmap>
+       <pixmap>:/icons/icons/logoRace.png</pixmap>
       </property>
       <property name="scaledContents">
        <bool>true</bool>
@@ -121,7 +121,7 @@
            <string>Go</string>
           </property>
           <property name="icon">
-           <iconset resource="MyRes.qrc">
+           <iconset>
             <normaloff>:/icons/icons/validate.png</normaloff>:/icons/icons/validate.png</iconset>
           </property>
           <property name="iconSize">
@@ -185,7 +185,7 @@
            <string>Enregistrer</string>
           </property>
           <property name="icon">
-           <iconset resource="MyRes.qrc">
+           <iconset>
             <normaloff>:/icons/icons/save.png</normaloff>:/icons/icons/save.png</iconset>
           </property>
          </widget>
@@ -234,7 +234,7 @@
 Coureur</string>
           </property>
           <property name="icon">
-           <iconset resource="MyRes.qrc">
+           <iconset>
             <normaloff>:/icons/icons/remove_all.png</normaloff>:/icons/icons/remove_all.png</iconset>
           </property>
          </widget>
@@ -252,7 +252,7 @@ Coureur</string>
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="MyRes.qrc">
+           <iconset>
             <normaloff>:/icons/icons/edit_add.png</normaloff>:/icons/icons/edit_add.png</iconset>
           </property>
          </widget>
@@ -263,7 +263,7 @@ Coureur</string>
            <string/>
           </property>
           <property name="icon">
-           <iconset resource="MyRes.qrc">
+           <iconset>
             <normaloff>:/icons/icons/edit_remove.png</normaloff>:/icons/icons/edit_remove.png</iconset>
           </property>
          </widget>
@@ -295,7 +295,7 @@ Coureur</string>
            <string>Stop</string>
           </property>
           <property name="icon">
-           <iconset resource="MyRes.qrc">
+           <iconset>
             <normaloff>:/icons/icons/stop.png</normaloff>:/icons/icons/stop.png</iconset>
           </property>
          </widget>
@@ -352,7 +352,7 @@ Coureur</string>
            <string>Charger Listing</string>
           </property>
           <property name="icon">
-           <iconset resource="MyRes.qrc">
+           <iconset>
             <normaloff>:/icons/icons/open.png</normaloff>:/icons/icons/open.png</iconset>
           </property>
           <property name="iconSize">
@@ -397,7 +397,7 @@ Coureur</string>
            <string>Reprendre la dernière course</string>
           </property>
           <property name="icon">
-           <iconset resource="MyRes.qrc">
+           <iconset>
             <normaloff>:/icons/icons/refresh.png</normaloff>:/icons/icons/refresh.png</iconset>
           </property>
          </widget>
@@ -412,54 +412,7 @@ Coureur</string>
         <string>Options</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_4">
-        <item row="0" column="0" colspan="2">
-         <widget class="QCheckBox" name="cB_autoSave">
-          <property name="text">
-           <string>Sauvegarde auto des résultats toutes les</string>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QComboBox" name="comboBox_camera">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QCheckBox" name="cB_camera">
-          <property name="text">
-           <string>Utiliser Camera</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="3" rowspan="2">
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>469</width>
-            <height>48</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item row="0" column="2">
-         <widget class="QSpinBox" name="spB_syncTime">
-          <property name="suffix">
-           <string> minutes</string>
-          </property>
-          <property name="minimum">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <number>30</number>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0" colspan="2">
+        <item row="3" column="0" colspan="2">
          <widget class="QFrame" name="preview">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -478,6 +431,60 @@ Coureur</string>
           </property>
           <property name="frameShadow">
            <enum>QFrame::Raised</enum>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="2">
+         <widget class="QSpinBox" name="spB_syncTime">
+          <property name="suffix">
+           <string> minutes</string>
+          </property>
+          <property name="minimum">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <number>30</number>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="3" rowspan="3">
+         <spacer name="horizontalSpacer_4">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>469</width>
+            <height>48</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item row="2" column="0">
+         <widget class="QCheckBox" name="cB_camera">
+          <property name="text">
+           <string>Utiliser Camera</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QComboBox" name="comboBox_camera">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0" colspan="2">
+         <widget class="QCheckBox" name="cB_autoSave">
+          <property name="text">
+           <string>Sauvegarde auto des résultats toutes les</string>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QCheckBox" name="cB_enableLap">
+          <property name="text">
+           <string>Nombre de tours illimité</string>
           </property>
          </widget>
         </item>
@@ -542,8 +549,6 @@ Coureur</string>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources>
-  <include location="MyRes.qrc"/>
- </resources>
+ <resources/>
  <connections/>
 </ui>

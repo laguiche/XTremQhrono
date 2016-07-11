@@ -86,6 +86,7 @@ private slots:
     void takePicture();
     void addCheckPoint();
     void deleteCheckPoint();
+    void enableLaps(bool state);
 
 #ifdef TEST
     void runTestStep();
@@ -121,6 +122,7 @@ private:
     QString str_genre;
     QString str_scratch;
     QString str_time;
+    QString str_loop;
 
     //to manage racers' status
     int countListingRacers;//!amount of whole racers who are in the listing
@@ -133,6 +135,7 @@ private:
     QList<QTableWidget*> subRacesResults;
     QStringList subRaces;
     QHash<QString, int> numberOfChkPts; //!number of checkPoints for each subrace
+    bool bLoopRace;
 
     //attr for the listing stuff
     QStringList labelsListing; //! labels we want to search in the imported listing file and show int the ui
@@ -185,6 +188,7 @@ private:
     bool testDone;
     QTimer *testTimer;
 #endif
+    int addLap(int idxSubRace, int selRow);
 };
 
 /*!
