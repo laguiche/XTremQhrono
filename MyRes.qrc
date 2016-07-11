@@ -1,0 +1,30 @@
+<RCC>
+    <qresource prefix="/icons">
+        <file>icons/cancel.png</file>
+        <file>icons/CheckBox_ONi.png</file>
+        <file>icons/configure.png</file>
+        <file>icons/edit_add.png</file>
+        <file>icons/edit_remove.png</file>
+        <file>icons/exit.png</file>
+        <file>icons/find.png</file>
+        <file>icons/locked.png</file>
+        <file>icons/on_off.png</file>
+        <file>icons/open.png</file>
+        <file>icons/player_pause.png</file>
+        <file>icons/player_play.png</file>
+        <file>icons/player_stop.png</file>
+        <file>icons/plot.png</file>
+        <file>icons/properties.png</file>
+        <file>icons/question.png</file>
+        <file>icons/refresh.png</file>
+        <file>icons/remove_all.png</file>
+        <file>icons/save.png</file>
+        <file>icons/stop.png</file>
+        <file>icons/supprimer.png</file>
+        <file>icons/unlocked.png</file>
+        <file>icons/validate.png</file>
+        <file>icons/webcam.png</file>
+        <file>icons/logoRace.png</file>
+        <file>icons/saveas.png</file>
+    </qresource>
+</RCC>
