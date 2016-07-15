@@ -18,6 +18,12 @@ MainWindow::MainWindow(QWidget *parent) :
     //labels des listings, nombre et noms des courses,....
     readConfig();
 
+//    //Show results for racers
+    showRacersResults=new QLabel();
+    showRacersResults->setGeometry(400,400,200,200);
+    showRacersResults->setMinimumSize(200,200);
+    showRacersResults->show();
+
     //affichage du temps pour les coureurs
     showExternTime=new QLCDNumber();
     showExternTime->setDigitCount(8);
@@ -556,6 +562,21 @@ int MainWindow::addLap(int idxSubRace, int selRow)
 
 }
 
+void MainWindow::showRacersInformation()
+{
+    int ligne=subRacesResults[0]->rowCount()-1;
+    QString s_lignes;
+    if(ligne>=0)
+        for(int i=0;i<subRacesResults[0]->rowCount();i++)
+        {
+            for(int j=0;j<subRacesResults[0]->columnCount();j++)
+                s_lignes=s_lignes+subRacesResults[0]->item(i,j)->text();
+            s_lignes=s_lignes+"\n";
+        }
+    showRacersResults->setText(s_lignes);
+
+}
+
 int MainWindow::addScore(int idxSubRace,QString racerNumber,QString s_time, int numChkPts, int selRow)
 {
     int i=0;
@@ -711,6 +732,7 @@ void MainWindow::closeEvent (QCloseEvent *event)
             camera->stop();
         }
         showExternTime->close();
+        showRacersResults->close();
         if(!(subRacesResults.isEmpty()))
             {
                 //Création d'un objet QFile
@@ -1220,6 +1242,9 @@ void MainWindow::enterNumberRacer(){
        classRacers();
        connect(subRacesResults[i],SIGNAL(cellChanged(int,int)),this,SLOT(modifyResults(int,int)));
    }
+
+   //on an other screen, update information for racers
+   showRacersInformation();
 }
 
 void MainWindow::takePicture()

@@ -102,6 +102,7 @@ private:
 
     //for time of race
     QLCDNumber* showExternTime;
+    QLabel * showRacersResults;
     QTimer *timer; //timer to get tick every second
     QDateTime initStart; //start time
     int elapsedTime; //ticks count for the beginning of race
@@ -189,6 +190,7 @@ private:
     QTimer *testTimer;
 #endif
     int addLap(int idxSubRace, int selRow);
+    void showRacersInformation(void);
 };
 
 /*!
